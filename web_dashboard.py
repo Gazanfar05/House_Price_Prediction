@@ -4,7 +4,8 @@ import base64
 from pathlib import Path
 import traceback
 
-app = Flask(__name__, template_folder='templates')
+BASE_DIR = Path(__file__).resolve().parent
+app = Flask(__name__, template_folder=str(BASE_DIR / 'templates'))
 
 @app.route('/')
 def index():
@@ -13,7 +14,7 @@ def index():
 @app.route('/api/model-info')
 def get_model_info():
     try:
-        with open('model_info.json', 'r') as f:
+        with open(BASE_DIR / 'model_info.json', 'r') as f:
             return jsonify(json.load(f))
     except FileNotFoundError:
         return jsonify({'error': 'model_info.json not found'}), 404
@@ -27,8 +28,9 @@ def get_images():
         image_files = ['model_evaluation.png', 'coefficients.png', 'rmse_analysis.png']
         
         for img_file in image_files:
-            if Path(img_file).exists():
-                with open(img_file, 'rb') as f:
+            image_path = BASE_DIR / img_file
+            if image_path.exists():
+                with open(image_path, 'rb') as f:
                     images[img_file] = base64.b64encode(f.read()).decode()
         
         return jsonify(images)
@@ -42,10 +44,10 @@ def predict():
         
         import joblib
         
-        with open('house_price_model.pkl', 'rb') as f:
+        with open(BASE_DIR / 'house_price_model.pkl', 'rb') as f:
             model = joblib.load(f)
         
-        with open('model_info.json', 'r') as f:
+        with open(BASE_DIR / 'model_info.json', 'r') as f:
             model_info = json.load(f)
         
         features = model_info['features']
